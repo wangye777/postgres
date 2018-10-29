@@ -37,6 +37,8 @@ extern PlannedStmt *planner(Query *parse, int cursorOptions,
 		ParamListInfo boundParams);
 extern PlannedStmt *standard_planner(Query *parse, int cursorOptions,
 				 ParamListInfo boundParams);
+extern PlannedStmt *custom_planner(Query *parse, int cursorOptions,
+				 ParamListInfo boundParams);
 
 extern PlannerInfo *subquery_planner(PlannerGlobal *glob, Query *parse,
 				 PlannerInfo *parent_root,
