@@ -24,6 +24,8 @@
 #include "utils/selfuncs.h"
 #include "statistics/statistics.h"
 
+static bool cache_set = false;
+static RestrictInfo cust_cache;
 
 /*
  * Data structure for accumulating info about possible range-query
@@ -623,10 +625,20 @@ clause_selectivity(PlannerInfo *root,
 			bms_is_subset_singleton(rinfo->clause_relids, varRelid))
 		{
 			/* Cacheable --- do we already have the result? */
+			if (cache_set && equal(&cust_cache, rinfo))
+			{
+				fprintf(stderr, "loaded from cache\n", cust_cache.norm_selec);
+				rinfo->norm_selec = cust_cache.norm_selec;
+				rinfo->outer_selec = cust_cache.outer_selec;
+			}
+
 			if (jointype == JOIN_INNER)
 			{
 				if (rinfo->norm_selec >= 0)
+				{
+					fprintf(stderr,"selectivity found: %f\n", rinfo->norm_selec);
 					return rinfo->norm_selec;
+				}
 			}
 			else
 			{
@@ -842,10 +854,20 @@ clause_selectivity(PlannerInfo *root,
 	/* Cache the result if possible */
 	if (cacheable)
 	{
+		fprintf(stderr,"caching result: %f\n", s1);
+		if (!cache_set || !equal(&cust_cache, rinfo))
+		{
+			RestrictInfo* tmpri= (RestrictInfo*) copyObjectImpl(rinfo);
+			cust_cache = *tmpri;
+		}
 		if (jointype == JOIN_INNER)
 			rinfo->norm_selec = s1;
 		else
 			rinfo->outer_selec = s1;
+
+		cust_cache.norm_selec = rinfo->norm_selec;
+		cust_cache.outer_selec = rinfo->outer_selec;
+		cache_set = true;
 	}
 
 #ifdef SELECTIVITY_DEBUG

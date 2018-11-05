@@ -15,7 +15,6 @@
 
 #include "postgres.h"
 
-#include <stdio.h>
 #include <limits.h>
 #include <math.h>
 
@@ -66,7 +65,7 @@ int			force_parallel_mode = FORCE_PARALLEL_OFF;
 bool		parallel_leader_participation = true;
 
 /* Hook for plugins to get control in planner() */
-planner_hook_type planner_hook = custom_planner;
+planner_hook_type planner_hook = NULL;
 
 /* Hook for plugins to get control when grouping_planner() plans upper rels */
 create_upper_paths_hook_type create_upper_paths_hook = NULL;
@@ -274,19 +273,6 @@ planner(Query *parse, int cursorOptions, ParamListInfo boundParams)
 	else
 		result = standard_planner(parse, cursorOptions, boundParams);
 	return result;
-}
-
-PlannedStmt *
-custom_planner(Query *parse, int cursorOptions, ParamListInfo boundParams)
-{
-	fprintf(stderr,"\nEntering custom planner\n");
-
-	if (parse->commandType == CMD_SELECT)
-	{
-		fprintf(stderr,"Processing SELECT query\n");
-	}
-
-	standard_planner(parse, cursorOptions, boundParams);
 }
 
 PlannedStmt *
